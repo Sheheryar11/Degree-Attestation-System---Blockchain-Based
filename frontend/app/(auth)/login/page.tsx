@@ -27,7 +27,7 @@ export default function LoginPage() {
   const { mutate, isPending } = useMutation({
     mutationFn: (data: LoginInput) => authApi.login(data).then((r) => r.data),
     onSuccess: (data) => {
-      setAuth(data.user as Parameters<typeof setAuth>[0], data.accessToken);
+      setAuth(data.user as Parameters<typeof setAuth>[0], data.accessToken, data.refreshToken);
       toast.success('Welcome back!');
       router.push(getRoleHomePath(data.user.role));
     },

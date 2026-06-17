@@ -14,7 +14,7 @@ async function bootstrap() {
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
   const config = app.get(ConfigService);
 
-  app.use(helmet());
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cookieParser());
   app.enableCors({
     origin: config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000',

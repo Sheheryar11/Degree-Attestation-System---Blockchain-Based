@@ -21,12 +21,17 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
+        const refreshToken = localStorage.getItem('refresh_token');
         const { data } = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
           {},
-          { withCredentials: true },
+          {
+            withCredentials: true,
+            headers: refreshToken ? { Authorization: `Bearer ${refreshToken}` } : {},
+          },
         );
         localStorage.setItem('access_token', data.accessToken);
+        if (data.refreshToken) localStorage.setItem('refresh_token', data.refreshToken);
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return apiClient(originalRequest);
       } catch {

@@ -261,14 +261,53 @@ export function DegreeDetailsForm({ applicationId, onComplete }: { applicationId
             <FormField control={form.control} name="degreeName" render={({ field }) => (
               <FormItem>
                 <FormLabel>Degree Name <span className="text-destructive">*</span></FormLabel>
-                <FormControl><Input placeholder="Bachelor of Computer Science" {...field} /></FormControl>
+                <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select degree name" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="Bachelor of Science in Computer Science">BS Computer Science</SelectItem>
+                    <SelectItem value="Bachelor of Science in Software Engineering">BS Software Engineering</SelectItem>
+                    <SelectItem value="Bachelor of Science in Information Technology">BS Information Technology</SelectItem>
+                    <SelectItem value="Bachelor of Engineering in Computer Engineering">BE Computer Engineering</SelectItem>
+                    <SelectItem value="Bachelor of Engineering in Electrical Engineering">BE Electrical Engineering</SelectItem>
+                    <SelectItem value="Bachelor of Engineering in Civil Engineering">BE Civil Engineering</SelectItem>
+                    <SelectItem value="Bachelor of Engineering in Mechanical Engineering">BE Mechanical Engineering</SelectItem>
+                    <SelectItem value="Bachelor of Business Administration">BBA</SelectItem>
+                    <SelectItem value="Bachelor of Commerce">B.Com</SelectItem>
+                    <SelectItem value="Bachelor of Arts">BA</SelectItem>
+                    <SelectItem value="Bachelor of Science">BS</SelectItem>
+                    <SelectItem value="Master of Science in Computer Science">MS Computer Science</SelectItem>
+                    <SelectItem value="Master of Science in Software Engineering">MS Software Engineering</SelectItem>
+                    <SelectItem value="Master of Business Administration">MBA</SelectItem>
+                    <SelectItem value="Master of Philosophy">M.Phil</SelectItem>
+                    <SelectItem value="Doctor of Philosophy">PhD</SelectItem>
+                    <SelectItem value="MBBS">MBBS</SelectItem>
+                    <SelectItem value="BDS">BDS</SelectItem>
+                    <SelectItem value="LLB">LLB</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="degreeProgram" render={({ field }) => (
               <FormItem>
                 <FormLabel>Degree Program</FormLabel>
-                <FormControl><Input placeholder="BS / BE / MS / PhD" {...field} /></FormControl>
+                <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select program" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="BS">BS (Bachelor of Science)</SelectItem>
+                    <SelectItem value="BE">BE (Bachelor of Engineering)</SelectItem>
+                    <SelectItem value="BBA">BBA (Bachelor of Business Administration)</SelectItem>
+                    <SelectItem value="BCom">B.Com (Bachelor of Commerce)</SelectItem>
+                    <SelectItem value="BA">BA (Bachelor of Arts)</SelectItem>
+                    <SelectItem value="MBBS">MBBS</SelectItem>
+                    <SelectItem value="BDS">BDS</SelectItem>
+                    <SelectItem value="LLB">LLB</SelectItem>
+                    <SelectItem value="MS">MS (Master of Science)</SelectItem>
+                    <SelectItem value="MBA">MBA (Master of Business Administration)</SelectItem>
+                    <SelectItem value="MPhil">M.Phil</SelectItem>
+                    <SelectItem value="PhD">PhD (Doctor of Philosophy)</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )} />
