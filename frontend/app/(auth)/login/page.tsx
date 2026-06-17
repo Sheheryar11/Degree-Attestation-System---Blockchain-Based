@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ import { getRoleHomePath } from '@/lib/utils';
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const qc = useQueryClient();
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const { mutate, isPending } = useMutation({
     mutationFn: (data: LoginInput) => authApi.login(data).then((r) => r.data),
     onSuccess: (data) => {
+      qc.clear();
       setAuth(data.user as Parameters<typeof setAuth>[0], data.accessToken, data.refreshToken);
       toast.success('Welcome back!');
       router.push(getRoleHomePath(data.user.role));

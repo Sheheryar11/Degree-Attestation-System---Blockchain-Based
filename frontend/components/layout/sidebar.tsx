@@ -18,7 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/auth-store';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 
@@ -53,16 +53,22 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, clearAuth } = useAuthStore();
   const router = useRouter();
+  const qc = useQueryClient();
 
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
     onSettled: () => {
       clearAuth();
+      qc.clear();
       router.push('/login');
     },
   });
 
   const navItems = NAV_BY_ROLE[user?.role ?? ''] ?? [];
+
+  const activeHref = navItems
+    .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-card">
@@ -76,7 +82,7 @@ export function Sidebar() {
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
           {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + '/');
+            const active = item.href === activeHref;
             return (
               <Link key={item.href} href={item.href}>
                 <span className={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors', active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground')}>

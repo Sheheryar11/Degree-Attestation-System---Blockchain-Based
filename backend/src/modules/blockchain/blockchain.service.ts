@@ -241,4 +241,19 @@ export class BlockchainService implements OnModuleInit {
   async getRecord(applicationId: string) {
     return this.prisma.blockchainRecord.findUnique({ where: { applicationId } });
   }
+
+  async listAll() {
+    return this.prisma.blockchainRecord.findMany({
+      orderBy: { registeredAt: 'desc' },
+      include: {
+        application: {
+          select: {
+            trackingNumber: true,
+            student: { select: { email: true } },
+            degreeDetail: { select: { universityName: true, degreeName: true } },
+          },
+        },
+      },
+    });
+  }
 }
