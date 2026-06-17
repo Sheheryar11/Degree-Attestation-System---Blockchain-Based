@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files — never commit these
+.env
+**/.env
+.env.local
+**/.env.local
+
+# Build output
+dist/
+**/dist/
+.next/
+**/.next/
+build/
+
+# Uploads (generated files — stored on Cloudinary in production)
+backend/uploads/
+
+# Prisma generated client
+backend/node_modules/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Google Vision key (sensitive)
+*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+!nest-cli.json
+!backend/prisma/schema.prisma
+!blockchain/hardhat.config.js
