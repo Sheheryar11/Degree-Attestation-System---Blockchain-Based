@@ -41,3 +41,4 @@ Thumbs.db
 !nest-cli.json
 !backend/prisma/schema.prisma
 !blockchain/hardhat.config.js
+!backend/vercel.json
