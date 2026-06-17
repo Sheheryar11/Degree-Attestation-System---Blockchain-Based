@@ -1,0 +1,485 @@
+// Prisma schema — Degree Attestation System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ════════════════════════════════════════
+//  ENUMS
+// ════════════════════════════════════════
+
+enum Role {
+  STUDENT
+  OFFICER
+  REGISTRAR
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  OFFICER_APPROVED
+  OFFICER_REJECTED
+  REGISTRAR_REVIEW
+  REGISTRAR_APPROVED
+  REGISTRAR_REJECTED
+  RETURNED
+  PAYMENT_PENDING
+  PAYMENT_SUBMITTED
+  PAYMENT_VERIFIED
+  PAYMENT_REJECTED
+  CERTIFICATE_GENERATING
+  CERTIFICATE_GENERATED
+  BLOCKCHAIN_PENDING
+  COMPLETED
+  REJECTED
+  WITHDRAWN
+}
+
+enum AttestationType {
+  DOMESTIC
+  INTERNATIONAL
+  DUPLICATE
+  TRANSCRIPT
+  MIGRATION
+}
+
+enum DeliveryMethod {
+  SELF_PICKUP
+  COURIER_DOMESTIC
+  COURIER_INTERNATIONAL
+}
+
+enum Priority {
+  NORMAL
+  URGENT
+  EXPRESS
+}
+
+enum DocumentType {
+  CNIC_FRONT
+  CNIC_BACK
+  PHOTO
+  TRANSCRIPT
+  DEGREE
+  BANK_RECEIPT
+  OTHER
+}
+
+enum PaymentMethod {
+  BANK_CHALLAN
+  EASYPAISA
+  JAZZCASH
+  CARD
+  BLOCKCHAIN
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum CertificateType {
+  ATTESTATION
+  DUPLICATE_DEGREE
+  TRANSCRIPT
+}
+
+enum BlockchainStatus {
+  NOT_SUBMITTED
+  PENDING
+  CONFIRMED
+  REVOKED
+  FAILED
+}
+
+enum AuditAction {
+  REGISTER
+  LOGIN
+  LOGOUT
+  EMAIL_VERIFIED
+  PASSWORD_RESET
+  APPLICATION_CREATED
+  APPLICATION_SUBMITTED
+  APPLICATION_REVIEWED
+  APPLICATION_APPROVED
+  APPLICATION_REJECTED
+  APPLICATION_RETURNED
+  DOCUMENT_UPLOADED
+  DOCUMENT_DELETED
+  PAYMENT_SUBMITTED
+  PAYMENT_VERIFIED
+  PAYMENT_REJECTED
+  VOUCHER_GENERATED
+  CERTIFICATE_GENERATED
+  BLOCKCHAIN_SUBMITTED
+  BLOCKCHAIN_CONFIRMED
+  BLOCKCHAIN_REVOKED
+  VERIFICATION_QUERIED
+  USER_DEACTIVATED
+  USER_ROLE_CHANGED
+}
+
+// ════════════════════════════════════════
+//  USER
+// ════════════════════════════════════════
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  passwordHash     String
+  role             Role      @default(STUDENT)
+  isEmailVerified  Boolean   @default(false)
+  emailVerifyToken String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  personalDetail   PersonalDetail?
+  applications     Application[]   @relation("StudentApplications")
+  officerReviews   Application[]   @relation("OfficerReviews")
+  registrarReviews Application[]   @relation("RegistrarReviews")
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+// ════════════════════════════════════════
+//  PERSONAL DETAILS
+// ════════════════════════════════════════
+
+model PersonalDetail {
+  id                   String         @id @default(uuid())
+  userId               String         @unique
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // All fields optional to support partial saves (step-by-step form)
+  fullName             String?
+  fatherName           String?
+  cnic                 String?        // AES-256-GCM encrypted at rest
+  dateOfBirth          DateTime?
+  gender               Gender?
+  maritalStatus        MaritalStatus?
+  nationality          String?
+  domicileProvince     String?
+  permanentAddress     String?
+  currentAddress       String?
+  phoneNumber          String?
+  whatsappNumber       String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@map("personal_details")
+}
+
+// ════════════════════════════════════════
+//  APPLICATION
+// ════════════════════════════════════════
+
+model Application {
+  id                    String            @id @default(uuid())
+  trackingNumber        String            @unique
+  studentId             String
+  student               User              @relation("StudentApplications", fields: [studentId], references: [id])
+
+  reviewedByOfficerId   String?
+  reviewedByOfficer     User?             @relation("OfficerReviews",   fields: [reviewedByOfficerId],   references: [id])
+
+  reviewedByRegistrarId String?
+  reviewedByRegistrar   User?             @relation("RegistrarReviews", fields: [reviewedByRegistrarId], references: [id])
+
+  attestationType       AttestationType   @default(DOMESTIC)
+  status                ApplicationStatus @default(DRAFT)
+  rejectionReason       String?
+  totalFee              Float?
+
+  submittedAt           DateTime?
+  officerReviewedAt     DateTime?
+  registrarReviewedAt   DateTime?
+
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  degreeDetail          DegreeDetail?
+  attestationDetail     AttestationDetail?
+  documents             Document[]
+  ocrResults            OcrResult[]
+  voucher               Voucher?
+  payments              Payment[]
+  generatedCertificates GeneratedCertificate[]
+  blockchainRecord      BlockchainRecord?
+  auditLogs             AuditLog[]
+
+  @@index([studentId, status])
+  @@index([status])
+  @@map("applications")
+}
+
+// ════════════════════════════════════════
+//  DEGREE DETAIL
+// ════════════════════════════════════════
+
+model DegreeDetail {
+  id                  String      @id @default(uuid())
+  applicationId       String      @unique
+  application         Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  universityName      String?
+  degreeName          String?
+  degreeProgram       String?
+  degreeType          CertificateType?
+  rollNumber          String?
+  registrationNumber  String?
+  graduationYear      Int?
+  cgpa                String?
+  division            String?
+  degreeSerialNumber  String?
+  degreeIssuanceDate  String?
+  transcriptSerialNumber String?
+
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@map("degree_details")
+}
+
+// ════════════════════════════════════════
+//  ATTESTATION DETAIL
+// ════════════════════════════════════════
+
+model AttestationDetail {
+  id                  String          @id @default(uuid())
+  applicationId       String          @unique
+  application         Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  attestationType     AttestationType?
+  priority            Priority        @default(NORMAL)
+  deliveryMethod      DeliveryMethod  @default(SELF_PICKUP)
+  numberOfCopies      Int             @default(1)
+  destinationCountry  String?
+  purposeOfAttestation String?
+  employerName        String?
+  deliveryAddress     String?
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@map("attestation_details")
+}
+
+// ════════════════════════════════════════
+//  DOCUMENTS
+// ════════════════════════════════════════
+
+model Document {
+  id                 String       @id @default(uuid())
+  applicationId      String
+  application        Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  type               DocumentType
+  originalFilename   String
+  mimeType           String
+  fileSizeBytes      Int
+  cloudinaryUrl      String
+  cloudinaryPublicId String
+  sha256Hash         String?
+
+  ocrResult          OcrResult?
+
+  uploadedAt         DateTime     @default(now())
+
+  @@map("documents")
+}
+
+// ════════════════════════════════════════
+//  OCR RESULT
+// ════════════════════════════════════════
+
+model OcrResult {
+  id              String       @id @default(uuid())
+  documentId      String       @unique
+  document        Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  applicationId   String
+  application     Application  @relation(fields: [applicationId], references: [id])
+
+  rawText         String?      @db.Text
+  extractedData   Json?
+  confidenceScore Float?
+  isValid         Boolean      @default(false)
+  validationNotes String?
+
+  processedAt     DateTime     @default(now())
+
+  @@map("ocr_results")
+}
+
+// ════════════════════════════════════════
+//  VOUCHER
+// ════════════════════════════════════════
+
+model Voucher {
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  voucherNumber String      @unique
+  amount        Float
+  expiresAt     DateTime
+  pdfUrl        String?
+  isPaid        Boolean     @default(false)
+
+  payments      Payment[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("vouchers")
+}
+
+// ════════════════════════════════════════
+//  PAYMENT
+// ════════════════════════════════════════
+
+model Payment {
+  id              String        @id @default(uuid())
+  applicationId   String
+  application     Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  voucherId       String
+  voucher         Voucher       @relation(fields: [voucherId], references: [id])
+
+  method          PaymentMethod @default(BANK_CHALLAN)
+  status          PaymentStatus @default(PENDING)
+  amount          Float
+  transactionId   String?
+  bankName        String?
+  paymentDate     DateTime?
+  transactionRef  String?
+  receiptUrl      String?
+  rejectionReason String?
+  notes           String?
+  verifiedAt      DateTime?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([applicationId, status])
+  @@map("payments")
+}
+
+// ════════════════════════════════════════
+//  GENERATED CERTIFICATE
+// ════════════════════════════════════════
+
+model GeneratedCertificate {
+  id                 String          @id @default(uuid())
+  applicationId      String
+  application        Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  type               CertificateType
+  pdfUrl             String
+  cloudinaryPublicId String
+  sha256Hash         String          @unique
+  qrCodeUrl          String?
+
+  generatedAt        DateTime        @default(now())
+
+  blockchainRecord   BlockchainRecord?
+
+  @@map("generated_certificates")
+}
+
+// ════════════════════════════════════════
+//  BLOCKCHAIN RECORD
+// ════════════════════════════════════════
+
+model BlockchainRecord {
+  id              String                @id @default(uuid())
+  applicationId   String                @unique
+  application     Application           @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  certificateId   String?               @unique
+  certificate     GeneratedCertificate? @relation(fields: [certificateId], references: [id])
+
+  degreeId        String               @unique
+  degreeHash      String?
+  txHash          String?
+  blockNumber     Int?
+  contractAddress String?
+  status          BlockchainStatus     @default(NOT_SUBMITTED)
+
+  registeredAt    DateTime?
+  revokedAt       DateTime?
+
+  verificationRequests VerificationRequest[]
+
+  @@map("blockchain_records")
+}
+
+// ════════════════════════════════════════
+//  VERIFICATION REQUEST
+// ════════════════════════════════════════
+
+model VerificationRequest {
+  id                 String            @id @default(uuid())
+  blockchainRecordId String?
+  blockchainRecord   BlockchainRecord? @relation(fields: [blockchainRecordId], references: [id])
+
+  degreeIdQueried    String
+  queryMethod        String            // "degree_id" | "cnic_hash" | "qr"
+  found              Boolean
+  verifierIp         String?
+  result             Json?
+
+  requestedAt        DateTime          @default(now())
+
+  @@map("verification_requests")
+}
+
+// ════════════════════════════════════════
+//  AUDIT LOG
+// ════════════════════════════════════════
+
+model AuditLog {
+  id            String      @id @default(uuid())
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id])
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id])
+
+  action        AuditAction
+  metadata      Json?
+  ipAddress     String?
+  userAgent     String?
+
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([applicationId])
+  @@map("audit_logs")
+}
