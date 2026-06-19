@@ -358,7 +358,16 @@ export function DegreeDetailsForm({ applicationId, onComplete }: { applicationId
             <FormField control={form.control} name="division" render={({ field }) => (
               <FormItem>
                 <FormLabel>Division</FormLabel>
-                <FormControl><Input placeholder="First / Second / Third" {...field} /></FormControl>
+                <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select division" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="First">First Division</SelectItem>
+                    <SelectItem value="Second">Second Division</SelectItem>
+                    <SelectItem value="Third">Third Division</SelectItem>
+                    <SelectItem value="Distinction">Distinction</SelectItem>
+                    <SelectItem value="Pass">Pass</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )} />
