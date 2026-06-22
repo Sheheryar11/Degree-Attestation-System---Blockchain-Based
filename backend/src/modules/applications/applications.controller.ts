@@ -12,11 +12,20 @@ import { Role } from '@prisma/client';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ListApplicationsDto } from './dto/list-applications.dto';
-import { IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 class AdminRejectDto {
   @IsString()
   reason: string;
+}
+
+class OfficerReviewDto {
+  @IsIn(['APPROVED', 'REJECTED'])
+  decision: 'APPROVED' | 'REJECTED';
+
+  @IsOptional()
+  @IsString()
+  rejectionReason?: string;
 }
 
 @ApiTags('applications')
@@ -58,6 +67,30 @@ export class ApplicationsController {
   @ApiOperation({ summary: 'Submit application — auto-generates voucher (STUDENT)' })
   submit(@Param('id') id: string, @CurrentUser() user: AuthUser, @Req() req: Request) {
     return this.service.submit(id, user.id, req.ip, req.headers['user-agent']);
+  }
+
+  @Patch(':id/officer-review')
+  @Roles(Role.OFFICER)
+  @ApiOperation({ summary: 'Officer approves or rejects an application (OFFICER)' })
+  officerReview(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: OfficerReviewDto,
+    @Req() req: Request,
+  ) {
+    return this.service.officerReview(id, user.id, dto.decision, dto.rejectionReason, req.ip, req.headers['user-agent']);
+  }
+
+  @Patch(':id/registrar-review')
+  @Roles(Role.REGISTRAR)
+  @ApiOperation({ summary: 'Registrar approves or rejects an application (REGISTRAR)' })
+  registrarReview(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: OfficerReviewDto,
+    @Req() req: Request,
+  ) {
+    return this.service.registrarReview(id, user.id, dto.decision, dto.rejectionReason, req.ip, req.headers['user-agent']);
   }
 
   @Patch(':id/complete')

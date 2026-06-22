@@ -191,4 +191,90 @@ export class ApplicationsService {
 
     return updated;
   }
+
+  async officerReview(
+    id: string,
+    officerId: string,
+    decision: 'APPROVED' | 'REJECTED',
+    rejectionReason: string | undefined,
+    ip?: string,
+    ua?: string,
+  ) {
+    const app = await this.prisma.application.findUnique({
+      where: { id },
+      include: { student: { select: { email: true } } },
+    });
+    if (!app) throw new NotFoundException('Application not found');
+    if (!['SUBMITTED', 'UNDER_REVIEW'].includes(app.status)) {
+      throw new BadRequestException(`Cannot review application with status ${app.status}`);
+    }
+
+    const status = decision === 'APPROVED' ? ApplicationStatus.OFFICER_APPROVED : ApplicationStatus.OFFICER_REJECTED;
+    const updated = await this.prisma.application.update({
+      where: { id },
+      data: {
+        status,
+        reviewedByOfficerId: officerId,
+        officerReviewedAt: new Date(),
+        ...(decision === 'REJECTED' ? { rejectionReason } : {}),
+      },
+    });
+
+    await this.auditLog.log(
+      officerId,
+      decision === 'APPROVED' ? AuditAction.APPLICATION_APPROVED : AuditAction.APPLICATION_REJECTED,
+      JSON.parse(JSON.stringify({ applicationId: id, decision, rejectionReason })),
+      ip,
+      ua,
+    );
+
+    if (decision === 'REJECTED' && rejectionReason) {
+      this.email.sendApplicationRejected(app.student.email, app.trackingNumber, rejectionReason).catch(() => {});
+    }
+
+    return updated;
+  }
+
+  async registrarReview(
+    id: string,
+    registrarId: string,
+    decision: 'APPROVED' | 'REJECTED',
+    rejectionReason: string | undefined,
+    ip?: string,
+    ua?: string,
+  ) {
+    const app = await this.prisma.application.findUnique({
+      where: { id },
+      include: { student: { select: { email: true } } },
+    });
+    if (!app) throw new NotFoundException('Application not found');
+    if (!['OFFICER_APPROVED', 'REGISTRAR_REVIEW'].includes(app.status)) {
+      throw new BadRequestException(`Cannot review application with status ${app.status}`);
+    }
+
+    const status = decision === 'APPROVED' ? ApplicationStatus.REGISTRAR_APPROVED : ApplicationStatus.REGISTRAR_REJECTED;
+    const updated = await this.prisma.application.update({
+      where: { id },
+      data: {
+        status,
+        reviewedByRegistrarId: registrarId,
+        registrarReviewedAt: new Date(),
+        ...(decision === 'REJECTED' ? { rejectionReason } : {}),
+      },
+    });
+
+    await this.auditLog.log(
+      registrarId,
+      decision === 'APPROVED' ? AuditAction.APPLICATION_APPROVED : AuditAction.APPLICATION_REJECTED,
+      JSON.parse(JSON.stringify({ applicationId: id, decision, rejectionReason })),
+      ip,
+      ua,
+    );
+
+    if (decision === 'REJECTED' && rejectionReason) {
+      this.email.sendApplicationRejected(app.student.email, app.trackingNumber, rejectionReason).catch(() => {});
+    }
+
+    return updated;
+  }
 }

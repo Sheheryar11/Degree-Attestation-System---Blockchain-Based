@@ -43,3 +43,8 @@ Thumbs.db
 !blockchain/hardhat.config.js
 !backend/vercel.json
 !backend/src/modules/blockchain/DegreeAttestation.json
+
+.vercel
+
+# Local Netlify folder
+.netlify

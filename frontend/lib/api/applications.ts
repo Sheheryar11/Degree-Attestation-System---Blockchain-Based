@@ -6,6 +6,10 @@ export const applicationsApi = {
   listAll: (params?: { status?: string; skip?: number; take?: number }) => apiClient.get('/applications', { params }),
   getById: (id: string) => apiClient.get(`/applications/${id}`),
   submit: (id: string) => apiClient.patch(`/applications/${id}/submit`),
+  officerReview: (id: string, decision: 'APPROVED' | 'REJECTED', rejectionReason?: string) =>
+    apiClient.patch(`/applications/${id}/officer-review`, { decision, rejectionReason }),
+  registrarReview: (id: string, decision: 'APPROVED' | 'REJECTED', rejectionReason?: string) =>
+    apiClient.patch(`/applications/${id}/registrar-review`, { decision, rejectionReason }),
   adminComplete: (id: string) => apiClient.patch(`/applications/${id}/complete`),
   adminReject: (id: string, reason: string) => apiClient.patch(`/applications/${id}/reject`, { reason }),
   // Degree details

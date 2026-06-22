@@ -46,7 +46,7 @@ export default function AdminBlockchainPage() {
               <div className="p-12 text-center">
                 <Shield className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
                 <p className="text-sm font-medium">No blockchain records yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Records appear here once an application's payment is approved and degree registration begins.</p>
+                <p className="text-xs text-muted-foreground mt-1">Records appear here once an application&apos;s payment is approved and degree registration begins.</p>
               </div>
             ) : (
               <table className="w-full text-sm">
