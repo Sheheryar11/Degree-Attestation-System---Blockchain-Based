@@ -44,7 +44,11 @@ function parseOcrText(text: string): Partial<FormValues> {
 
   let degreeName = '';
   for (const line of lines) {
-    if (/bachelor|master|doctor|phd|b\.?sc|m\.?sc|b\.?e\.?|b\.?tech|m\.?s|m\.?phil|engineering|computer science|business administration/i.test(line) && line.length < 120) {
+    if (
+      !/university|institute|college|academy|school of/i.test(line) &&
+      /bachelor|master|doctor|phd|b\.?sc|m\.?sc|b\.?e\.?|b\.?tech|m\.?s|m\.?phil|engineering|computer science|business administration/i.test(line) &&
+      line.length < 120
+    ) {
       degreeName = line.replace(/[^a-zA-Z0-9\s&().,'-]/g, '').trim();
       break;
     }
