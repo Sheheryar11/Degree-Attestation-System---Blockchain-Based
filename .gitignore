@@ -42,3 +42,4 @@ Thumbs.db
 !backend/prisma/schema.prisma
 !blockchain/hardhat.config.js
 !backend/vercel.json
+!backend/src/modules/blockchain/DegreeAttestation.json
