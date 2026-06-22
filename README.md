@@ -30,7 +30,7 @@ A full-stack, blockchain-powered degree attestation platform built for the Highe
 | **State** | Zustand (auth), TanStack Query (server state) |
 | **Forms** | React Hook Form + Zod |
 | **OCR** | Tesseract.js (client-side) |
-| **Hosting** | Netlify (frontend) + Railway (backend) |
+| **Hosting** | Netlify (frontend) + Vercel (backend) + Supabase (database) |
 
 ---
 
@@ -144,11 +144,11 @@ npx hardhat test   # 21 tests
 
 | Service | Platform | Notes |
 |---|---|---|
-| Frontend | Netlify | Auto-deploys from `frontend/` via `netlify.toml` |
-| Backend | Railway | Set env vars; Railway auto-detects NestJS |
-| Database | Railway PostgreSQL | Attach to backend service |
+| Frontend | [Netlify](https://degreeattestationsystem.netlify.app) | Auto-deploys from `frontend/` via `netlify.toml` |
+| Backend | [Vercel](https://degree-attestation-system-blockc-sheryarsherry07-9052s-projects.vercel.app) | Serverless functions via `backend/api/index.ts`; set env vars per `backend/.env.example` |
+| Database | Supabase PostgreSQL | Use the connection pooler URL (port 6543) for `DATABASE_URL` and the session-mode URL (port 5432) for `DIRECT_URL` |
 
-Set `FRONTEND_URL` on Railway to your Netlify URL, and `NEXT_PUBLIC_API_URL` on Netlify to your Railway URL.
+Set `FRONTEND_URL` on Vercel to your Netlify URL, and `NEXT_PUBLIC_API_URL` on Netlify to your Vercel URL (including the `/api/v1` suffix).
 
 ---
 
