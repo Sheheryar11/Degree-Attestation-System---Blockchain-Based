@@ -8,6 +8,7 @@ const PDFDocument = require('pdfkit') as typeof import('pdfkit');
 import * as QRCode from 'qrcode';
 import { createWriteStream, mkdirSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
+import { tmpdir } from 'os';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -20,7 +21,10 @@ export class CertificatesService {
     private readonly config: ConfigService,
     private readonly cloudinary: CloudinaryService,
   ) {
-    this.uploadDir = join(process.cwd(), 'uploads', 'certificates');
+    // Serverless filesystems (Vercel) are read-only outside /tmp
+    this.uploadDir = process.env.VERCEL
+      ? join(tmpdir(), 'certificates')
+      : join(process.cwd(), 'uploads', 'certificates');
     mkdirSync(this.uploadDir, { recursive: true });
   }
 
