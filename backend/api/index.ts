@@ -1,19 +1,18 @@
-import serverlessHttp from 'serverless-http';
-import type { Handler } from 'serverless-http';
+import type { Request, Response } from 'express';
 import { createApp } from '../src/create-app';
 
-let cachedHandler: Handler | null = null;
+let cachedExpressApp: ((req: Request, res: Response) => void) | null = null;
 
-async function getHandler(): Promise<Handler> {
-  if (!cachedHandler) {
+async function getExpressApp() {
+  if (!cachedExpressApp) {
     const app = await createApp();
     await app.init();
-    cachedHandler = serverlessHttp(app.getHttpAdapter().getInstance());
+    cachedExpressApp = app.getHttpAdapter().getInstance();
   }
-  return cachedHandler;
+  return cachedExpressApp;
 }
 
 export default async function handler(req: unknown, res: unknown) {
-  const h = await getHandler();
-  return h(req as never, res as never);
+  const expressApp = await getExpressApp();
+  expressApp(req as Request, res as Response);
 }
